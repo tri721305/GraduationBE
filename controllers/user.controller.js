@@ -1,5 +1,5 @@
-export const test = (req, res) => {
-  res.json({
-    message: "Working",
-  });
-};
+// export const test = (req, res) => {
+//   res.json({
+//     message: "Working",
+//   });
+// };

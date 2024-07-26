@@ -1,10 +1,19 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import userRoutes from "./routes/user.route.js";
+// import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.router.js";
+import planRoutes from "./routes/plan.route.js";
+import { upload } from "./middleware/multer.js";
+
+import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import { signInWithEmailAndPassword } from "firebase/auth";
+// import { auth } from "./configs/firebase.config.js";
+import auth from "./configs/firebase.config.js";
+
 dotenv.config();
 const app = express();
+
 app.use(express.json());
 mongoose
   .connect(process.env.MONGO)
@@ -17,10 +26,64 @@ mongoose
 app.listen(3000, () => {
   console.log("Listening on port 3000!");
 });
+const uploadImage = async (file, quantity) => {
+  const storageFB = getStorage();
+  await signInWithEmailAndPassword(
+    auth,
+    process.env.FIREBASE_USER,
+    process.env.FIREBASE_AUTH
+  );
+  if (quantity == "single") {
+    const dateTime = Date.now();
+    const fileName = `images/${dateTime}`;
+    const storageRef = ref(storageFB, fileName);
+    const metadata = {
+      contentType: file.type,
+    };
+    await uploadBytesResumable(storageRef, file.buffer, metadata);
+    return fileName;
+  }
+  if (quantity == "multiple") {
+    for (let i = 0; i < file.images.length; i++) {
+      const dateTime = Date.now();
+      const fileName = `images/${dateTime}`;
+      const storageRef = ref(storageFB, fileName);
+      const metadata = {
+        contentType: file.type,
+      };
+      const saveImage = await Image.create({ imageUrl: fileName });
+      file.item.imageId.push({ _id: saveImage._id });
+      await file.item.save();
 
-app.use("/api/user", userRoutes);
+      await uploadBytesResumable(storageRef, file.images[i].buffer, metadata);
+    }
+    return;
+  }
+};
+
+// app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/upload", uploadRoutes);
+// app.use("/api/upload", uploadRoutes);
+app.use("/plans", planRoutes);
+
+// Test upload
+app.post("/test-upload", upload, async (req, res) => {
+  console.log("req nè", req.file);
+  // const file = {
+  //   type: req.file.mimetype,
+  //   buffer: req.file.buffer,
+  // };
+  // // try {
+  // //   const buildImage = await uploadImage(file, "single");
+  // //   res.send({
+  // //     status: "SUCCESS",
+  // //     imageName: buildImage,
+  // //   });
+  // // } catch (error) {
+  // //   console.log("error", error);
+  // // }
+});
+
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
