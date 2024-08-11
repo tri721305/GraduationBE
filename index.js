@@ -6,7 +6,12 @@ import authRoutes from "./routes/auth.router.js";
 import planRoutes from "./routes/plan.route.js";
 import { upload } from "./middleware/multer.js";
 
-import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import { signInWithEmailAndPassword } from "firebase/auth";
 // import { auth } from "./configs/firebase.config.js";
 import auth from "./configs/firebase.config.js";
@@ -40,8 +45,15 @@ const uploadImage = async (file, quantity) => {
     const metadata = {
       contentType: file.type,
     };
-    await uploadBytesResumable(storageRef, file.buffer, metadata);
-    return fileName;
+    const snapshot = await uploadBytesResumable(
+      storageRef,
+      file.buffer,
+      metadata
+    );
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log("File successfully uploaded.");
+    // await uploadBytesResumable(storageRef, file.buffer, metadata);
+    return { file: fileName, url: downloadURL };
   }
   if (quantity == "multiple") {
     for (let i = 0; i < file.images.length; i++) {
@@ -54,34 +66,31 @@ const uploadImage = async (file, quantity) => {
       const saveImage = await Image.create({ imageUrl: fileName });
       file.item.imageId.push({ _id: saveImage._id });
       await file.item.save();
-
       await uploadBytesResumable(storageRef, file.images[i].buffer, metadata);
     }
     return;
   }
 };
 
-// app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 // app.use("/api/upload", uploadRoutes);
 app.use("/plans", planRoutes);
 
 // Test upload
 app.post("/test-upload", upload, async (req, res) => {
-  console.log("req nè", req.file);
-  // const file = {
-  //   type: req.file.mimetype,
-  //   buffer: req.file.buffer,
-  // };
-  // // try {
-  // //   const buildImage = await uploadImage(file, "single");
-  // //   res.send({
-  // //     status: "SUCCESS",
-  // //     imageName: buildImage,
-  // //   });
-  // // } catch (error) {
-  // //   console.log("error", error);
-  // // }
+  const file = {
+    type: req.file.mimetype,
+    buffer: req.file.buffer,
+  };
+  try {
+    const buildImage = await uploadImage(file, "single");
+    res.send({
+      status: "SUCCESS",
+      imageName: buildImage,
+    });
+  } catch (error) {
+    console.log("error", error);
+  }
 });
 
 app.use((err, req, res, next) => {
