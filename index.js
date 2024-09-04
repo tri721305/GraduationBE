@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 // import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.router.js";
 import planRoutes from "./routes/plan.route.js";
+import hotelRoutes from "./routes/hotel.router.js";
 import { upload } from "./middleware/multer.js";
 
 import {
@@ -16,7 +17,17 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 // import { auth } from "./configs/firebase.config.js";
 import auth from "./configs/firebase.config.js";
 
+// CLOUDINARY
+import { v2 as cloudinary } from "cloudinary";
+
 dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 const app = express();
 
 app.use(express.json());
@@ -75,6 +86,7 @@ const uploadImage = async (file, quantity) => {
 app.use("/api/auth", authRoutes);
 // app.use("/api/upload", uploadRoutes);
 app.use("/plans", planRoutes);
+app.use("/api/hotel", hotelRoutes);
 
 // Test upload
 app.post("/test-upload", upload, async (req, res) => {
@@ -82,6 +94,7 @@ app.post("/test-upload", upload, async (req, res) => {
     type: req.file.mimetype,
     buffer: req.file.buffer,
   };
+  console.log("req nè", req.file);
   try {
     const buildImage = await uploadImage(file, "single");
     res.send({
