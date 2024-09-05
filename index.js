@@ -94,7 +94,6 @@ app.post("/test-upload", upload, async (req, res) => {
     type: req.file.mimetype,
     buffer: req.file.buffer,
   };
-  console.log("req nè", req.file);
   try {
     const buildImage = await uploadImage(file, "single");
     res.send({
