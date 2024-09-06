@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.router.js";
 import planRoutes from "./routes/plan.route.js";
 import hotelRoutes from "./routes/hotel.router.js";
+import hotelUserRoutes from "./routes/hotels.user.router.js";
 import { upload } from "./middleware/multer.js";
 
 import {
@@ -87,6 +88,7 @@ app.use("/api/auth", authRoutes);
 // app.use("/api/upload", uploadRoutes);
 app.use("/plans", planRoutes);
 app.use("/api/hotel", hotelRoutes);
+app.use("/api/hotel", hotelUserRoutes);
 
 // Test upload
 app.post("/test-upload", upload, async (req, res) => {

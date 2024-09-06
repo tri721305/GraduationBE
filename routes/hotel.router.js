@@ -24,6 +24,7 @@ async function uploadImages(imageFiles) {
   const imageUrls = await Promise.all(uploadPromises);
   return imageUrls;
 }
+// ============================================== CREATE HOTEL ==============================================
 
 router.post(
   "/create",
@@ -35,14 +36,6 @@ router.post(
       const imageFiles = req.files;
       const newHotel = req.body;
 
-      //   const uploadPromises = imageFiles.map(async (image) => {
-      //     const b64 = Buffer.from(image.buffer).toString("base64");
-      //     let dataURI = "data:" + image.mimetype + ";base64," + b64;
-      //     const res = await cloudinary.v2.uploader.upload(dataURI);
-      //     return res.url;
-      //   });
-
-      //   const imageUrls = await Promise.all(uploadPromises);
       const imageUrls = await uploadImages(imageFiles);
 
       newHotel.imageUrls = imageUrls;
@@ -59,6 +52,7 @@ router.post(
     }
   }
 );
+// ============================================== GET HOTEL BY ID ==============================================
 router.post("/getHotelById", async (req, res) => {
   //   const id = req.params.id.toString();
   const id = req.body.id;
@@ -72,14 +66,14 @@ router.post("/getHotelById", async (req, res) => {
     res.status(500).json({ message: "Error fetching hotels" });
   }
 });
-
+// ============================================== UPDATE ==============================================
 router.post("/editHotel", upload.array("imageFiles"), async (req, res) => {
   const id = req.body.id;
 
   try {
     const updatedHotel = req.body;
     updatedHotel.lastUpdated = new Date();
-
+    console.log("upated Hotel", updatedHotel);
     const hotel = await Hotel.findOneAndUpdate(
       {
         _id: id,
